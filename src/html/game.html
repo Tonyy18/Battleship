@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<link rel="stylesheet" type="text/css" href="/static/css/app.css">
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+	<div class="container">
+		<div class="status">Waiting for another user</div>
+		<div class="ships" id="ships"></div>
+		<div class="board">
+			<div class="left">
+				<div class="cell">A</div>
+				<div class="cell">B</div>
+				<div class="cell">C</div>
+				<div class="cell">D</div>
+				<div class="cell">E</div>
+				<div class="cell">F</div>
+				<div class="cell">G</div>
+				<div class="cell">H</div>
+				<div class="cell">I</div>
+				<div class="cell">J</div>
+			</div>
+			<div class="cell-container" id="container">
+				
+			</div>
+			<div class="bottom">
+				<div class="cell">1</div>
+				<div class="cell">2</div>
+				<div class="cell">3</div>
+				<div class="cell">4</div>
+				<div class="cell">5</div>
+				<div class="cell">6</div>
+				<div class="cell">7</div>
+				<div class="cell">8</div>
+				<div class="cell">9</div>
+				<div class="cell">10</div>
+			</div>
+		</div>
+	</div>
+	<script src="/socket.io/socket.io.js"></script>
+	<script>
+		const socket = io("http://localhost");
+		const roomId = window.location.href.split("/")[4];
+		const name = window.location.href.split("/")[5];
+		let started = false;
+		let yourTurn = false;
+		const container = $("#container");
+		const pointEl = $("<div class='point'>✓</div>");
+		const hitEl = $("<div class='hit'>x</div>")
+		for(let row = 1; row <= 10; row++) {
+			const rowEl = $("<div class='row' data-row='" + row + "'></div>");
+			for(let cell = 1; cell <= 10; cell++) {
+				const cellEl = $("<div class='cell' data-cell='" + row + "-" + cell + "'></div>")
+				rowEl.append(cellEl)
+			}
+			container.append(rowEl);
+		}
+
+		const buildShip = (length, color) => {
+			const ship = $('<div class="ship" data-length="' + length + '" data-color="' + color + '"></div>')
+			for(let a = 0; a < length; a++) {
+				const cell = $('<div class="cell" data-cell="' + (a + 1) + '"></cell>');
+				cell.attr("style", "background-color: " + color)
+				ship.append(cell)
+			}
+			return ship;
+		}
+
+		let ships = [
+			buildShip(5, "#3398ff"),
+			buildShip(4, "#33ffa7"),
+			buildShip(3, "#ff3333"),
+			buildShip(3, "#f581fe"),
+			buildShip(2, "#81f7fe"),
+			buildShip(1, "#83999a")
+		]
+		for(ship in ships) {
+			$("#ships").append(ships[ship])
+		}
+		let activeShip = null;
+		let shipsPlaced = 0;
+		const setActive = (ship) => {
+			if(!started) return;
+			$("#container .cell.placing").css("background-color", "").removeClass("placing");
+			activeShip = $(ship);
+			$(".ship").removeClass("active");
+			activeShip.addClass("active");
+			$(".ship:not(.active)").removeClass("vertical");
+		}
+		$("#ships").on("click", ".cell", (e) => {
+			setActive($(e.target).parent());
+		})
+		$("#ships").on("click", ".ship.active .cell", (e) => {
+			if(!started) return;
+			activeShip.toggleClass("vertical");
+		})
+		$("#container").on("mouseover", ".row .cell", (e) => {
+			if(!started) return;
+			if(activeShip == null) return;
+			const cell = $(e.target);
+			const hasShip = cell.hasClass("ship");
+			const cellNum = parseInt(cell.attr("data-cell").split("-")[1])
+			const row = cell.parent();
+			const rowNum = parseInt(row.attr("data-row"))
+			const shipLength = parseInt(activeShip.attr("data-length"));
+			const shipColor = activeShip.attr("data-color")
+			if(activeShip.hasClass("vertical")) {
+				if(rowNum > (11 - shipLength) || hasShip) return;
+				$("#container .cell.placing").css("background-color", "")
+				$("#container .row .cell").removeClass("placing");
+				for(let a = 0; a < shipLength; a++) {
+					const nextRow = rowNum + a;
+					$("#container .row[data-row='" + nextRow + "'] .cell[data-cell='" + nextRow + "-" + cellNum + "']").css("background-color", shipColor).addClass("placing")
+				}
+			} else {
+				if(cellNum > (11 - shipLength) || hasShip) return;
+				$("#container .cell.placing").css("background-color", "")
+				$("#container .row .cell").removeClass("placing");
+				for(let a = 0; a < shipLength; a++) {
+					const nextCell = cellNum + a;
+					$("#container .row[data-row='" + rowNum + "'] .cell[data-cell='" + rowNum + "-" + nextCell + "']:not(.ship)").css("background-color", shipColor).addClass("placing")
+				}
+			}
+		})
+		$("#container").on("click", ".cell", (e) => {
+			if(!started) return;
+			const color = activeShip.attr("data-color");
+			$("#container .placing").removeClass("placing").addClass("ship").css("background-color", color);
+			activeShip.remove();
+			const available = $("#ships").children();
+			if(available.length != 0) {
+				setActive(available[0])
+			} else {
+				//No more ships
+				activeShip.remove();
+				activeShip = null;
+				socket.emit("ready");
+				$(".status").html("Other player is not ready");
+			}
+		})
+		const animateHit = (el) => {
+			el = $(el);
+			const color = el.css("color")
+			el.css("background-color", "#4b4b4b")
+			setTimeout(() => {
+				el.css("background-color", "")
+			}, 2000)
+		}
+		const animatePoint = (el) => {
+			el = $(el);
+			const color = el.css("color")
+			el.css("background-color", "#f3df2a")
+			setTimeout(() => {
+				el.css("background-color", "")
+			}, 2000)
+		}
+		const start = () => {
+			setActive($("#ships").children()[0])
+			started = true;
+		}
+		socket.emit("joinRoom", {"room": roomId, "name": name})
+		socket.on("start", () => {
+			start();
+			$(".status").html("Game started!")
+			setTimeout(() => {
+				$(".status").html("Place your battleships!");
+			}, 3000)
+		})
+		socket.on("ready", () => {
+			$(".status").html("Opponents turn");
+		})
+		socket.on("play", () => {
+			$(".status").html("Choose your shot!");
+			yourTurn = true;
+			$("#container .cell").addClass("playable");
+		})
+	</script>
+</body>
+</html>

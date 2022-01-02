@@ -1,0 +1,102 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap');
+* {
+	font-family: "Roboto";
+	font-size: 15px;
+	padding: 0px;
+	margin: 0px;
+	position: relative;
+}
+body {
+	text-align: center;
+}
+.container {
+	display: inline-block;
+}
+.board {
+	display: inline-block;
+	font-size: 0px;
+	vertical-align: middle;
+	width: 352px;
+	margin: 0 auto;
+	margin-top: 50px;
+	margin-left: 50px;
+}
+
+.cell-container {
+	display: inline-block;
+	vertical-align: top;
+}
+.cell-container .row {
+	font-size: 0px;
+}
+.cell-container .cell,
+.ships .ship .cell {
+	height: 30px;
+	display: inline-block;
+	width: 30px;
+	border: 1px solid DarkGray;
+	transition: background-color 0.3s;
+	-webkit-transition: background-color 0.3s;
+	-moz-transition: background-color 0.3s;
+	-o-transition: background-color 0.3s;
+	background-color:  white;
+}
+.cell-container .cell.placing,
+.cell-container .cell.ship {
+	border: 1px solid black;
+}
+.board .left {
+	display: inline-block;
+	vertical-align: top;
+	font-size: 0px;
+}
+.board .bottom {
+	margin-left: 32px;
+	font-size: 0px;
+}
+.board .left .cell,
+.board .bottom .cell {
+	line-height: 32px;
+	text-align: center;
+	width: 32px;
+}
+
+.board .bottom .cell {
+	display: inline-block;
+}
+.ships {
+	display: inline-block;
+	vertical-align: middle;
+	width: 175px;
+	text-align: left;
+}
+.ships .ship {
+	margin: 7px;
+	font-size: 0px;
+}
+.ships .ship.vertical .cell {
+	display: block;
+}
+.ship.active .cell {
+	border: 1px solid black;
+}
+.cell-container .cell .hit {
+	position: absolute;
+	top: 0px;
+	font-size: 13px;
+	right: 5px;
+}
+
+.cell-container .cell .point {
+	position: absolute;
+	bottom: 0px;
+	font-size: 13px;
+	left: 5px;
+}
+.cell-container .cell.playable:hover {
+	background-color: Black !important;
+}
+.status {
+	font-size: 18px;
+	padding-top: 50px;
+}
