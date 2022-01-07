@@ -59,18 +59,7 @@
 	</form>
 	<script src="/socket.io/socket.io.js"></script>
 	<script>
-		const socket = io("http://localhost")
-		let name;
-		socket.on("roomCreated", (room) => {
-			window.location = "/game/" + room + "/" + name;
-		}) 
-		$("#form").submit(() => {
-			name = $.trim($("#name").val())
-			if(name) {
-				socket.emit("newRoom");
-			}
-			return false;
-		})
+		const socket = io("http://" + window.location.host);
 	</script>
 </body>
 </html>

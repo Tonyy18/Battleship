@@ -6,8 +6,9 @@
 </head>
 <body>
 	<div class="container">
-		<div class="status">Waiting for another user</div>
-		<div class="ships" id="ships"></div>
+		<div class="status">Waiting for another player</div>
+		<div class="ships" id="ships">
+		</div>
 		<div class="board">
 			<div class="left">
 				<div class="cell">A</div>
@@ -37,15 +38,44 @@
 				<div class="cell">10</div>
 			</div>
 		</div>
+		<div class="board" id="shoot-board">
+			<div class="left">
+				<div class="cell">A</div>
+				<div class="cell">B</div>
+				<div class="cell">C</div>
+				<div class="cell">D</div>
+				<div class="cell">E</div>
+				<div class="cell">F</div>
+				<div class="cell">G</div>
+				<div class="cell">H</div>
+				<div class="cell">I</div>
+				<div class="cell">J</div>
+			</div>
+			<div class="cell-container">
+				
+			</div>
+			<div class="bottom">
+				<div class="cell">1</div>
+				<div class="cell">2</div>
+				<div class="cell">3</div>
+				<div class="cell">4</div>
+				<div class="cell">5</div>
+				<div class="cell">6</div>
+				<div class="cell">7</div>
+				<div class="cell">8</div>
+				<div class="cell">9</div>
+				<div class="cell">10</div>
+			</div>
+		</div>
 	</div>
 	<script src="/socket.io/socket.io.js"></script>
 	<script>
-		const socket = io("http://localhost");
+		const socket = io("http://" + window.location.host);
 		const roomId = window.location.href.split("/")[4];
 		const name = window.location.href.split("/")[5];
 		let started = false;
 		let yourTurn = false;
-		const container = $("#container");
+		const container = $(".cell-container");
 		const pointEl = $("<div class='point'>✓</div>");
 		const hitEl = $("<div class='hit'>x</div>")
 		for(let row = 1; row <= 10; row++) {
@@ -79,7 +109,6 @@
 			$("#ships").append(ships[ship])
 		}
 		let activeShip = null;
-		let shipsPlaced = 0;
 		const setActive = (ship) => {
 			if(!started) return;
 			$("#container .cell.placing").css("background-color", "").removeClass("placing");
@@ -135,8 +164,7 @@
 				//No more ships
 				activeShip.remove();
 				activeShip = null;
-				socket.emit("ready");
-				$(".status").html("Other player is not ready");
+				shipsPlaced();
 			}
 		})
 		const animateHit = (el) => {
@@ -155,26 +183,15 @@
 				el.css("background-color", "")
 			}, 2000)
 		}
-		const start = () => {
-			setActive($("#ships").children()[0])
-			started = true;
+		const shipsPlaced = () => {
+			$("#ships").hide();
+			$("#shoot-board").css("display", "inline-block")
 		}
-		socket.emit("joinRoom", {"room": roomId, "name": name})
-		socket.on("start", () => {
-			start();
-			$(".status").html("Game started!")
-			setTimeout(() => {
-				$(".status").html("Place your battleships!");
-			}, 3000)
-		})
-		socket.on("ready", () => {
-			$(".status").html("Opponents turn");
-		})
-		socket.on("play", () => {
-			$(".status").html("Choose your shot!");
-			yourTurn = true;
-			$("#container .cell").addClass("playable");
-		})
+		const start = () => {
+			started = true;
+			setActive($("#ships").children()[0])
+		}
+		start();
 	</script>
 </body>
 </html>
