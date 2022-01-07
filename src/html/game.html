@@ -2,9 +2,19 @@
 <html>
 <head>
 	<link rel="stylesheet" type="text/css" href="/static/css/app.css">
-	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<script src="/static/js/jquery.js"></script>
 </head>
 <body>
+	<div class="modal">
+		<div class="modal-bg"></div>
+		<div class="modal-padding">
+			<div class="modal-body">
+				<p>Waiting for another player</p>
+				<p>Invitation link</p>
+				<input type="text" placeholder="Invitation link" id="link">
+			</div>
+		</div>
+	</div>
 	<div class="container">
 		<div class="status">Waiting for another player</div>
 		<div class="ships" id="ships">
@@ -72,7 +82,7 @@
 	<script>
 		const socket = io("http://" + window.location.host);
 		const roomId = window.location.href.split("/")[4];
-		const name = window.location.href.split("/")[5];
+		const userId = window.location.href.split("/")[5];
 		let started = false;
 		let yourTurn = false;
 		const container = $(".cell-container");
@@ -190,8 +200,12 @@
 		const start = () => {
 			started = true;
 			setActive($("#ships").children()[0])
+			$(".modal").fadeOut();
 		}
-		start();
+		socket.on("joined", username => {
+			alert(username)
+		})
+		socket.emit("join", {roomId: roomId, userId: userId})
 	</script>
 </body>
 </html>

@@ -104,3 +104,42 @@ body {
 	font-size: 30px;
 	line-height: 30px;
 }
+
+.modal {
+	position: fixed;
+	top: 0px;
+	bottom: 0px;
+	height: 100%;
+	width: 100%;
+	z-index: 1000;
+}
+.modal .modal-bg {
+	height: 100%;
+	width: 100%;
+	background-color: rgba(0,0,0,0.2);
+}
+.modal .modal-padding {
+	position: absolute;
+	width: 350px;
+	padding: 10px;
+	left: calc(50% - 175px);
+	top: 100px;
+}
+
+.modal .modal-body {
+	background-color: white;
+	box-shadow: 0 2px 4px 0 rgba(0,0,0,0.2);
+	padding: 20px 10px;
+	border-radius: 3px;
+}
+
+.modal input {
+	border: 1px solid#E2E2E2;
+	outline: none;
+	padding: 10px 15px;
+	border-radius: 3px;
+	width: calc(100% - 20px - 30px);
+}
+.modal p {
+	padding-bottom: 10px;
+}

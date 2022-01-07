@@ -48,7 +48,7 @@
 			background-color: #0073e8;
 		}
 	</style>
-	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<script src="/static/js/jquery.js"></script>
 </head>
 <body>
 	<h1>Battleship</h1>
@@ -59,7 +59,23 @@
 	</form>
 	<script src="/socket.io/socket.io.js"></script>
 	<script>
+		let randomId = () => {
+  			return Math.floor((1 + Math.random()) * 0x10000)
+      		.toString(16)
+      		.substring(1);
+		}
+		const roomId = randomId();
 		const socket = io("http://" + window.location.host);
+		socket.on("reserved", function(socketId) {
+			window.location.href = "/game/" + roomId + "/" + socketId
+		})
+		$("#form").submit(function() {
+			const name = $.trim($("#name").val());
+			if(name) {
+				socket.emit("reserve", name);
+			}
+			return false;
+		})
 	</script>
 </body>
 </html>
