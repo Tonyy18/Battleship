@@ -23,6 +23,15 @@ body {
 	display: inline-block;
 	vertical-align: top;
 }
+.cell-container .layout {
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	background-color: rgba(0,0,0,0.2);
+	z-index: 1000;
+	width: 100%;
+	height: 100%;
+}
 .cell-container .row {
 	font-size: 0px;
 }
@@ -85,8 +94,15 @@ body {
 .board#shoot-board {
 	margin-left: 20px;
 }
-.board#shoot-board .cell:hover {
+.board#shoot-board .cell-container.active .cell:not(.miss):not(.miss):hover,
+.board#shoot-board .cell-container .cell.shot {
+	background-color: black;
+}
+.board#shoot-board .cell-container .cell.hit {
 	background-color: red;
+}
+.board#shoot-board .cell-container .cell.miss {
+	background-color: DarkGray;
 }
 .board#shoot-board .cell div {
 	position: absolute;

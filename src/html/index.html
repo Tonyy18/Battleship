@@ -59,6 +59,7 @@
 	</form>
 	<script src="/socket.io/socket.io.js"></script>
 	<script>
+		$("#name").focus();
 		let randomId = () => {
   			return Math.floor((1 + Math.random()) * 0x10000)
       		.toString(16)

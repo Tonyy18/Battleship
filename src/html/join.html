@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<style>
+		@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap');
+		* {
+			font-family: Roboto;
+			box-sizing: border-box;
+			font-size: 15px;
+			text-align: center;
+		}
+		body {
+			padding-top: 65px;
+		}
+		h1 {
+			font-weight: normal;
+			font-size:  40px;
+		}
+		form {
+			width: 300px;
+			display: inline-block;
+		}
+		input {
+			width: 100%;
+			border-radius: 5px;
+			transition: all 0.3s;
+			-webkit-transition: all 0.3s;
+			-o-transition: all 0.3s;
+			-moz-transition: all 0.3s;
+		}
+		input[type=text] {
+			padding: 15px 25px;
+			outline: none;
+			border: 1px solid #E2E2E2;
+		}
+		input[type=text]:hover,
+		input[type=text]:focus {
+			border: 1px solid DarkGray;
+		}
+		input[type=submit] {
+			line-height: 50px;
+			border: none;
+			background-color: #3599ff;
+			color: white;
+			margin-top: 15px;
+		}
+		input[type=submit]:hover {
+			background-color: #0073e8;
+		}
+        #room-id {
+            font-weight: bold;
+        }
+	</style>
+	<script src="/static/js/jquery.js"></script>
+</head>
+<body>
+	<h1>Battleship</h1>
+	<p>Join game: <span id="room-id"></span></p>
+	<form id="form">
+		<input type="text" id="name" placeholder="Player name">
+		<input type="submit" value="Continue">
+	</form>
+	<script src="/socket.io/socket.io.js"></script>
+	<script>
+		$("#name").focus();
+		const socket = io("http://" + window.location.host);
+        const roomId = window.location.href.split("/")[4];
+        $("#room-id").html(roomId);
+		socket.on("reserved", function(socketId) {
+			window.location.href = "/game/" + roomId + "/" + socketId
+		})
+		$("#form").submit(function() {
+			const name = $.trim($("#name").val());
+			if(name) {
+				socket.emit("reserve", name);
+			}
+			return false;
+		})
+	</script>
+</body>
+</html>

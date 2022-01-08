@@ -9,14 +9,15 @@
 		<div class="modal-bg"></div>
 		<div class="modal-padding">
 			<div class="modal-body">
-				<p>Waiting for another player</p>
+				<p>Hello <span id="module-username"></span></p>
+				<p>Waiting for another player to join</p>
 				<p>Invitation link</p>
 				<input type="text" placeholder="Invitation link" id="link">
 			</div>
 		</div>
 	</div>
 	<div class="container">
-		<div class="status">Waiting for another player</div>
+		<div class="status" id="status">Waiting for another player</div>
 		<div class="ships" id="ships">
 		</div>
 		<div class="board">
@@ -61,8 +62,8 @@
 				<div class="cell">I</div>
 				<div class="cell">J</div>
 			</div>
-			<div class="cell-container">
-				
+			<div class="cell-container active" id="opponentsCells">
+				<div class="layout" id="layout"></div>
 			</div>
 			<div class="bottom">
 				<div class="cell">1</div>
@@ -83,6 +84,7 @@
 		const socket = io("http://" + window.location.host);
 		const roomId = window.location.href.split("/")[4];
 		const userId = window.location.href.split("/")[5];
+		let lastTarget = null;
 		let started = false;
 		let yourTurn = false;
 		const container = $(".cell-container");
@@ -164,7 +166,14 @@
 		})
 		$("#container").on("click", ".cell", (e) => {
 			if(!started) return;
+			if($(e.target).hasClass("ship")) return;
 			const color = activeShip.attr("data-color");
+			const placing = $("#container .placing");
+			const shipCells = [];
+			for(let a = 0; a < placing.length; a++) {
+				shipCells.push($(placing[a]).attr("data-cell"));
+			}
+			shipPlaced(shipCells);
 			$("#container .placing").removeClass("placing").addClass("ship").css("background-color", color);
 			activeShip.remove();
 			const available = $("#ships").children();
@@ -177,6 +186,17 @@
 				shipsPlaced();
 			}
 		})
+		$("#opponentsCells").on("click", ".cell", function(e) {
+			if(!yourTurn || $(e.target).hasClass("hit") || $(e.target).hasClass("miss")) return;
+			yourTurn = false;
+			const target = $(e.target).attr("data-cell");
+			$(e.target).addClass("shot");
+			lastTarget = target;
+			$("#opponentsCells").removeClass("active");
+			setTimeout(() => {
+				socket.emit("shoot", {"cell": target, "roomId": roomId})
+			},1000);
+		});
 		const animateHit = (el) => {
 			el = $(el);
 			const color = el.css("color")
@@ -196,14 +216,71 @@
 		const shipsPlaced = () => {
 			$("#ships").hide();
 			$("#shoot-board").css("display", "inline-block")
+			$("#status").html("Other player is not ready yet");
+			socket.emit("shipsPlaced", roomId);
+		}
+		const shipPlaced = (cells) => {
+			socket.emit("newShip", {ships: cells, roomId: roomId});
 		}
 		const start = () => {
 			started = true;
 			setActive($("#ships").children()[0])
 			$(".modal").fadeOut();
+			$("#status").html("Place your ships on the table");
+		}
+		const startTurn = () => {
+			yourTurn = true;
+			$("#layout").fadeOut();
+			$("#status").html("Choose your shot!")
+			$("#opponentsCells").addClass("active");
+		}
+		const endTurn = () => {
+			yourTurn = false;
+			$("#status").html("It's your opponents turn");
+			$("#layout").fadeIn();
+			$("#opponentsCells").removeClass("active");
 		}
 		socket.on("joined", username => {
-			alert(username)
+			$("#link").val(window.location.host + "/join/" + roomId);
+			$("#module-username").html(username);
+		})
+		socket.on("startBuilding", function(opponent) {
+			setTimeout(function() {
+				start();
+			}, 2000)
+		});
+		socket.on("start", () => {
+			$("#status").html("Game started!");
+			setTimeout(function() {
+				if(!yourTurn) {
+					endTurn();
+				}
+			}, 500)
+		})
+		socket.on("turn", () => {
+			startTurn();
+		})
+		socket.on("hitFeedback", hit => {
+			let hitClass = "miss"
+			let statusText = "You missed ;(";
+			if(hit) {
+				hitClass = "hit";
+				statusText = "You hit a ship!";
+			}
+			$("#opponentsCells .cell[data-cell='" + lastTarget + "']").removeClass("shot").addClass(hitClass);
+			$("#status").html(statusText);
+			setTimeout(function() {
+				endTurn();
+				socket.emit("changeTurns", roomId);
+			}, 2000)
+		})
+		socket.on("won", () => {
+			alert("You won!");
+			window.location.href = "/"
+		})
+		socket.on("lost", () => {
+			alert("You lost ;(");
+			window.location.href = "/";
 		})
 		socket.emit("join", {roomId: roomId, userId: userId})
 	</script>
